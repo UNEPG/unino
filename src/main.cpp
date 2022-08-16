@@ -1,12 +1,26 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "SdsDustSensor.h"
-SdsDustSensor sds(10, 11); // passing HardwareSerial& as parameter RX/TX
 
+#include <Wire.h>
+#include "ClosedCube_HDC1080.h"
+
+SdsDustSensor sds(10, 11); // passing HardwareSerial& as parameter RX/TX
+ClosedCube_HDC1080 hdc1080;
 void setup()
 {
+  // setup serial
   Serial.begin(9600);
+  // setup sds011
   sds.begin(); // this line will begin Serial1 with given baud rate (9600 by default)
+
+  // setup hdc1080
+  hdc1080.begin(0x40);
+
+  Serial.print("Manufacturer ID=0x");
+  Serial.println(hdc1080.readManufacturerId(), HEX); // 0x5449 ID of Texas Instruments
+  Serial.print("Device ID=0x");
+  Serial.println(hdc1080.readDeviceId(), HEX); // 0x1050 ID of the device
 }
 
 void loop()
@@ -17,10 +31,18 @@ void loop()
   PmResult pm = sds.queryPm();
   if (pm.isOk())
   {
+    // sds011
     Serial.print("PM2.5 = ");
     Serial.print(pm.pm25);
     Serial.print(", PM10 = ");
     Serial.println(pm.pm10);
+
+    // hdc1080
+    Serial.print("T=");
+    Serial.print(hdc1080.readTemperature());
+    Serial.print("C, RH=");
+    Serial.print(hdc1080.readHumidity());
+    Serial.println("%");
   }
   else
   // has some problem with the sensor
@@ -28,5 +50,5 @@ void loop()
     Serial.print("Could not read values from sensor, reason: ");
     Serial.println(pm.statusToString());
   }
-  delay(1000);
+  delay(3000);
 }
