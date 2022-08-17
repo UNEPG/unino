@@ -1,26 +1,29 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "SdsDustSensor.h"
-
+#include <Adafruit_LPS2X.h>
 #include <Wire.h>
 #include "ClosedCube_HDC1080.h"
 
 SdsDustSensor sds(10, 11); // passing HardwareSerial& as parameter RX/TX
+// HDC1080
 ClosedCube_HDC1080 hdc1080;
+// Use LPS25 or LPS22 here
+Adafruit_LPS25 lps;
+Adafruit_Sensor *lps_temp, *lps_pressure;
+
 void setup()
 {
   // setup serial
   Serial.begin(9600);
   // setup sds011
   sds.begin(); // this line will begin Serial1 with given baud rate (9600 by default)
-
   // setup hdc1080
   hdc1080.begin(0x40);
-
-  Serial.print("Manufacturer ID=0x");
-  Serial.println(hdc1080.readManufacturerId(), HEX); // 0x5449 ID of Texas Instruments
-  Serial.print("Device ID=0x");
-  Serial.println(hdc1080.readDeviceId(), HEX); // 0x1050 ID of the device
+  // Serial.print("Manufacturer ID=0x");
+  // Serial.println(hdc1080.readManufacturerId(), HEX); // 0x5449 ID of Texas Instruments
+  // Serial.print("Device ID=0x");
+  // Serial.println(hdc1080.readDeviceId(), HEX); // 0x1050 ID of the device
 }
 
 void loop()
@@ -43,12 +46,17 @@ void loop()
     Serial.print("C, RH=");
     Serial.print(hdc1080.readHumidity());
     Serial.println("%");
-  }
-  else
-  // has some problem with the sensor
-  {
-    Serial.print("Could not read values from sensor, reason: ");
-    Serial.println(pm.statusToString());
+
+    // LPS2X
+    if (lps.begin_I2C())
+    {
+      sensors_event_t pressure;
+      sensors_event_t temp;
+      lps_temp->getEvent(&temp);
+      lps_pressure->getEvent(&pressure);
+      Serial.println(pressure.pressure);
+      Serial.println(temp.temperature);
+    }
   }
   delay(3000);
 }
