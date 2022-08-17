@@ -79,7 +79,7 @@ void loop()
 
   // LPS2X
   Serial.print("pressure=");
-  Serial.print(lps25hb.readPressure());
+  Serial.print(lps25hb.readPressure() * 0.1);
   Serial.print(RETURN);
   // PSoTT End
   Serial.print(RETURN);
